@@ -8,8 +8,8 @@ class Creature extends  Card{
         super(name, power);
     }
     
-    getDescription(){
-        return [super.getDescription(), getCreatureDescription()]
+    getDescriptions(){
+        return [super.getDescriptions(), getCreatureDescription(this)]
     }
 }
 class Duck extends Creature{
