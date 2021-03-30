@@ -5,6 +5,7 @@ const Game = function() {
     function Game(bottomPlayerDeck, topPlayerDeck) {
         this.bottomPlayerStartDeck = bottomPlayerDeck;
         this.topPlayerStartDeck = topPlayerDeck;
+        
     }
 
     // Подготавливает колоды, создает игроков, запускает игру.
