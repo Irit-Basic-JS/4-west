@@ -186,6 +186,20 @@ class PseudoDuck extends Dog{
 	}
 }
 
+class Nemo extends Creature{
+	constructor(name, power) {
+		super(name ?? "Немо", power ?? 4);
+	}
+	doBeforeAttack (gameContext, continuation){
+		const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+		const oppositeCard = oppositePlayer.table[position];
+		const prototype = Object.getPrototypeOf(oppositeCard);
+		Object.setPrototypeOf(this, prototype);
+		gameContext.updateView();
+		this.doBeforeAttack(gameContext, continuation);
+	}
+}
+
 function isDuck(card) {
 	return card && card.quacks && card.swims;
 }
@@ -211,13 +225,11 @@ function getCreatureDescription(card) {
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
-	new Duck(),
-	new Brewer(),
+	new Nemo(),
 ];
 const banditStartDeck = [
-	new Dog(),
-	new PseudoDuck(),
-	new Dog(),
+	new Brewer(),
+	new Brewer(),
 ];
 
 
