@@ -118,12 +118,31 @@ class Lad extends Dog {
 	
 }
 
-// Отвечает является ли карта уткой.
+class Rogue extends Creature {
+	static toSteal = ["modifyDealedDamageToCreature", "modifyDealedDamageToPlayer", "modifyTakenDamage"];
+	
+	constructor(name, power) {
+		super(name ?? "Изгой", power ?? 2);
+	}
+	
+	modifyTakenDamage(value, fromCard, gameContext, continuation) {
+		const prototype = Object.getPrototypeOf(fromCard);
+		for (const property of Rogue.toSteal) {
+			if (prototype.hasOwnProperty(property)) {
+				this[property] = prototype[property];
+				delete prototype[property];
+			}
+		}
+		
+		gameContext.updateView();
+		super.modifyTakenDamage(value, fromCard, gameContext, continuation);
+	}
+}
+
 function isDuck(card) {
 	return card instanceof Duck;
 }
 
-// Отвечает является ли карта собакой.
 function isDog(card) {
 	return card instanceof Dog;
 }
@@ -145,14 +164,15 @@ function getCreatureDescription(card) {
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
-	new Duck(),
-	new Duck(),
-	new Duck(),
+	new Rogue(),
+	new Rogue(),
 ];
 const banditStartDeck = [
 	new Lad(),
 	new Lad(),
+	new Lad(),
 ];
+
 
 
 // Создание игры.
