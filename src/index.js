@@ -6,8 +6,20 @@ import SpeedRate from "./SpeedRate.js";
 class Creature extends Card {
 	constructor(name, power) {
 		super(name, power);
+		this._currentPower = power;
 	}
 	
+	get currentPower(){
+		return this._currentPower;
+	}
+	
+	set currentPower(value){
+		if (value > this.maxPower){
+			this._currentPower = this.maxPower;
+		} else{
+			this._currentPower = value;
+		}
+	}
 	getDescriptions() {
 		return [super.getDescriptions(), getCreatureDescription(this)];
 	}
@@ -138,6 +150,27 @@ class Rogue extends Creature {
 		super.modifyTakenDamage(value, fromCard, gameContext, continuation);
 	}
 }
+class Brewer extends Duck{
+	
+	constructor(name, power) {
+		super(name ?? "Пивовар", power ?? 2);
+		this._currentPower = power ?? 2;
+	}
+	
+	modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
+		const cards = gameContext.currentPlayer.table.concat(gameContext.oppositePlayer.table);
+		for (const card of cards){
+			if (isDuck(card)){
+				card.view.signalHeal(function (){
+					card.maxPower += 1;
+					card.currentPower += 2;
+					card.updateView();
+				});
+			}
+		}
+		super.modifyDealedDamageToCreature(value, toCard, gameContext, continuation);
+	}
+}
 
 function isDuck(card) {
 	return card instanceof Duck;
@@ -164,13 +197,15 @@ function getCreatureDescription(card) {
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
-	new Rogue(),
-	new Rogue(),
+	new Brewer(),
+	new Duck(),
+	new Duck(),
 ];
 const banditStartDeck = [
-	new Lad(),
-	new Lad(),
-	new Lad(),
+	new Dog(),
+	new Dog(),
+	new Dog(),
+	new Dog(),
 ];
 
 
