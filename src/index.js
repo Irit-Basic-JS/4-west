@@ -9,17 +9,18 @@ class Creature extends Card {
 		this._currentPower = power;
 	}
 	
-	get currentPower(){
+	get currentPower() {
 		return this._currentPower;
 	}
 	
-	set currentPower(value){
-		if (value > this.maxPower){
+	set currentPower(value) {
+		if (value > this.maxPower) {
 			this._currentPower = this.maxPower;
-		} else{
+		} else {
 			this._currentPower = value;
 		}
 	}
+	
 	getDescriptions() {
 		return [super.getDescriptions(), getCreatureDescription(this)];
 	}
@@ -41,7 +42,7 @@ class Duck extends Creature {
 
 class Dog extends Creature {
 	constructor(name, power) {
-		super(name ? name : "Пес-бандит", power ? power : 3);
+		super(name ?? "Пес-бандит", power ?? 3);
 	}
 }
 
@@ -51,7 +52,9 @@ class Trasher extends Dog {
 	}
 	
 	modifyTakenDamage(value, fromCard, gameContext, continuation) {
-		this.view.signalAbility(() => continuation(value - 1));
+		this.view.signalAbility(function () {
+			super.modifyTakenDamage(value - 1, fromCard, gameContext, continuation);
+		});
 	}
 	
 	getDescriptions() {
@@ -122,7 +125,8 @@ class Lad extends Dog {
 	
 	getDescriptions() {
 		const descriptions = super.getDescriptions();
-		if (Lad.prototype.hasOwnProperty("modifyDealedDamageToCreature") && Lad.prototype.hasOwnProperty("modifyTakenDamage")) {
+		if (Lad.prototype.hasOwnProperty("modifyDealedDamageToCreature")
+			&& Lad.prototype.hasOwnProperty("modifyTakenDamage")) {
 			descriptions.push("Чем их больше, тем они сильнее");
 		}
 		return descriptions;
@@ -150,7 +154,8 @@ class Rogue extends Creature {
 		super.modifyTakenDamage(value, fromCard, gameContext, continuation);
 	}
 }
-class Brewer extends Duck{
+
+class Brewer extends Duck {
 	
 	constructor(name, power) {
 		super(name ?? "Пивовар", power ?? 2);
@@ -159,9 +164,9 @@ class Brewer extends Duck{
 	
 	modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
 		const cards = gameContext.currentPlayer.table.concat(gameContext.oppositePlayer.table);
-		for (const card of cards){
-			if (isDuck(card)){
-				card.view.signalHeal(function (){
+		for (const card of cards) {
+			if (isDuck(card)) {
+				card.view.signalHeal(function () {
 					card.maxPower += 1;
 					card.currentPower += 2;
 					card.updateView();
@@ -172,7 +177,7 @@ class Brewer extends Duck{
 	}
 }
 
-class PseudoDuck extends Dog{
+class PseudoDuck extends Dog {
 	constructor(name, power) {
 		super(name ?? "Псевдоутка", power ?? 3);
 	}
@@ -186,11 +191,12 @@ class PseudoDuck extends Dog{
 	}
 }
 
-class Nemo extends Creature{
+class Nemo extends Creature {
 	constructor(name, power) {
 		super(name ?? "Немо", power ?? 4);
 	}
-	doBeforeAttack (gameContext, continuation){
+	
+	doBeforeAttack(gameContext, continuation) {
 		const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
 		const oppositeCard = oppositePlayer.table[position];
 		const prototype = Object.getPrototypeOf(oppositeCard);
@@ -231,7 +237,6 @@ const banditStartDeck = [
 	new Brewer(),
 	new Brewer(),
 ];
-
 
 
 // Создание игры.
