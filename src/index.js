@@ -172,8 +172,22 @@ class Brewer extends Duck{
 	}
 }
 
+class PseudoDuck extends Dog{
+	constructor(name, power) {
+		super(name ?? "Псевдоутка", power ?? 3);
+	}
+	
+	quacks() {
+		console.log("quack");
+	}
+	
+	swims() {
+		console.log("float: both;");
+	}
+}
+
 function isDuck(card) {
-	return card instanceof Duck;
+	return card && card.quacks && card.swims;
 }
 
 function isDog(card) {
@@ -197,14 +211,12 @@ function getCreatureDescription(card) {
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
+	new Duck(),
 	new Brewer(),
-	new Duck(),
-	new Duck(),
 ];
 const banditStartDeck = [
 	new Dog(),
-	new Dog(),
-	new Dog(),
+	new PseudoDuck(),
 	new Dog(),
 ];
 
