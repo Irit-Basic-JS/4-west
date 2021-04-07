@@ -100,7 +100,7 @@ class Gatling extends Creature{
             for (let oppositeCard of oppositeCards) {
                 taskQueue.push(onDone => this.view.showAttack(onDone));
                 taskQueue.push(onDone => {
-                    this.dealDamageToCreature(this.currentPower, oppositeCard, gameContext, onDone);
+                    this.dealDamageToCreature(2, oppositeCard, gameContext, onDone);
                 });
             }
         } else {
@@ -183,6 +183,11 @@ class Rogue extends Creature {
         }
         taskQueue.continueWith(continuation);
     }
+
+    getDescriptions() {
+        let descriptions = ["Ворует способности своих врагов"];
+        return descriptions.concat([...super.getDescriptions()]);
+    }
 }
 
 class Brewer extends Duck{
@@ -193,12 +198,12 @@ class Brewer extends Duck{
     doBeforeAttack(gameContext, continuation) {
         const taskQueue = new TaskQueue();
         const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
-        let cards = currentPlayer.table.concat(oppositePlayer.table);
+        const cards = currentPlayer.table.concat(oppositePlayer.table);
         for (let card of cards) {
             if (isDuck(card)) {
                 card.maxPower += 1;
                 card.setCurrentPower(2);
-                card.view.signalHeal();
+                taskQueue.push(onDone => card.view.signalHeal(onDone));
                 card.updateView();
             }
         }
@@ -218,14 +223,30 @@ class PseudoDuck extends Dog {
     };
 }
 
+class Nemo extends Creature {
+    constructor(name = "Немо", maxPower = 4, image = 'Nemo.jpg') {
+        super(name, maxPower, image);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const taskQueue = new TaskQueue();
+        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+        const oppositeCard = oppositePlayer.table[position];
+
+        if (oppositeCard) {
+            Object.setPrototypeOf(this, Object.getPrototypeOf(oppositeCard));
+            gameContext.updateView();
+        }
+        taskQueue.continueWith(continuation);
+    }
+}
+
 const seriffStartDeck = [
-    new Duck(),
-    new Brewer(),
+    new Nemo(),
 ];
 const banditStartDeck = [
-    new Dog(),
-    new PseudoDuck(),
-    new Dog(),
+    new Brewer(),
+    new Brewer(),
 ];
 
 
