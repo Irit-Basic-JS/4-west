@@ -40,6 +40,7 @@ const Card = function () {
         continuation();
     };
 
+
     // Карта действует в рамках хода, когда настало ее время.
     // Нельзя переопределять в наследниках.
     Card.prototype.actInTurn = function (gameContext, continuation) {
