@@ -107,19 +107,101 @@ class Gatling extends Creature {
 }
 
 
+class Lad extends Dog {
+    constructor(name, maxPower) {
+        super(name || 'Браток', maxPower || 2);
+    }
+
+    static getInGameCount() {
+        return this.inGameCount || 0;
+    }
+
+    static setInGameCount(value) {
+        this.inGameCount = value;
+    }
+
+    static getBonus() {
+        let count = this.getInGameCount();
+        return count * (count + 1) / 2;
+    }
+
+    doAfterComingIntoPlay(gameContext, continuation) {
+        let updatedCount = Lad.getInGameCount() + 1;
+        Lad.setInGameCount(updatedCount);
+        continuation();
+    }
+
+    doBeforeRemoving(continuation) {
+        let updatedCount = Lad.getInGameCount() - 1;
+        Lad.setInGameCount(updatedCount);
+        continuation();
+    }
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
+        let damage = value + Lad.getBonus();
+        continuation(damage);
+    }
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        let damage = value > Lad.getBonus() ? value - Lad.getBonus() : 0;
+        continuation(damage);
+    }
+
+    getDescriptions() {
+        if (Lad.prototype.hasOwnProperty('modifyTakenDamage') &&
+            Lad.prototype.hasOwnProperty('modifyDealedDamageToCreature')) {
+                return [
+                    'Чем их больше, тем они сильнее',
+                    ...super.getDescriptions(),
+                ]
+            } else {
+                return [];
+            }
+    }
+}
+
+
+class Rogue extends Creature {
+    constructor(name, maxPower) {
+        super(name || 'Изгой', maxPower || 2);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+        const oppositeCard = oppositePlayer.table[position];
+        const obj = Object.getPrototypeOf(oppositeCard);
+        const properties = [
+            'modifyDealedDamageToCreature',
+            'modifyDealedDamageToPlayer',
+            'modifyTakenDamage',
+        ];
+
+        for (let property of properties) {
+            if (obj.hasOwnProperty(property)) {
+                this[property] = obj[property];
+                delete obj[property];
+            }
+        }
+
+        updateView();
+        continuation();
+    }
+}
+
+
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
     new Duck(),
     new Duck(),
     new Duck(),
-    new Gatling(),
+    new Rogue(),
 ];
 
 // Колода Бандита, верхнего игрока.
 const banditStartDeck = [
-    new Trasher(),
-    new Dog(),
-    new Dog(),
+    new Lad(),
+    new Lad(),
+    new Lad(),
 ];
 
 
@@ -127,7 +209,7 @@ const banditStartDeck = [
 const game = new Game(seriffStartDeck, banditStartDeck);
 
 // Глобальный объект, позволяющий управлять скоростью всех анимаций.
-SpeedRate.set(1);
+SpeedRate.set(2);
 
 // Запуск игры.
 game.play(false, (winner) => {
