@@ -29,6 +29,14 @@ function getCreatureDescription(card) {
 
 
 class Creature extends Card {
+    get currentPower() {
+        return this._currentPower;
+    }
+
+    set currentPower(value) {
+        this._currentPower = Math.min(this.maxPower, value);
+    }
+
     getDescriptions() {
         return [
             getCreatureDescription(this),
@@ -183,25 +191,76 @@ class Rogue extends Creature {
             }
         }
 
-        updateView();
         continuation();
+        updateView();
+    }
+}
+
+
+class Brewer extends Duck {
+    constructor(name, maxPower) {
+        super(name || 'Пивовар', maxPower || 2);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+        const allCardsInTable = [
+            ...currentPlayer.table,
+            ...oppositePlayer.table,
+        ];
+
+        for (const card of allCardsInTable) {
+            if (isDuck(card)) {
+				card.maxPower += 1;
+				card.currentPower += 2;
+				card.view.signalHeal(continuation);
+                card.updateView();
+            }
+        }
+    }
+}
+
+
+class PseudoDuck extends Dog {
+    constructor(name, maxPower) {
+        super(name || 'Псевдоутка', maxPower || 3);
+    }
+
+    quacks() {
+        console.log('quack');
+    }
+
+    swims() {
+        console.log('float: both');
+    }
+}
+
+
+class Nemo extends Creature {
+    constructor(name, maxPower) {
+        super(name || 'Немо', maxPower || 4);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+        const oppositeCard = oppositePlayer.table[position];
+        const prototype = Object.getPrototypeOf(oppositeCard);
+        Object.setPrototypeOf(this, prototype);
+        continuation()
+        updateView();
     }
 }
 
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
-    new Duck(),
-    new Duck(),
-    new Duck(),
-    new Rogue(),
+    new Nemo(),
 ];
 
 // Колода Бандита, верхнего игрока.
 const banditStartDeck = [
-    new Lad(),
-    new Lad(),
-    new Lad(),
+    new Brewer(),
+    new Brewer(),
 ];
 
 
