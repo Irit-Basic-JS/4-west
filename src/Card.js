@@ -19,7 +19,7 @@ const Card = function () {
         this.view.putInDeck(deck, inBottomRow, position);
     };
 
-    // Вызвается, когда карта должна войти в игру.
+    // Вызывается, когда карта должна войти в игру.
     // Нельзя переопределять в наследниках.
     Card.prototype.comeIntoPlay = function (gameContext, place, continuation) {
         const taskQueue = new TaskQueue();
