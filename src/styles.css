@@ -167,8 +167,8 @@ body {
 }
 
 .cardImage {
-    left: 5px;
-    right: 5px;
+    left: 0;
+    right: 0;
     position: absolute;
     height: 100%;
     text-align: center;
@@ -212,9 +212,9 @@ body {
     opacity: 0.0;
 }
 
-.cardSignal {
+/*.cardSignal {
     transform: rotateY(180deg);
-}
+}*/
 
 .cardSignal.damage,
 .playerSignal.damage {
