@@ -40,6 +40,89 @@ function Duck() {
 function Dog() {
 }
 
+//Громила
+class Trasher extends Dog {
+    constructor(name = 'Громила', power = 5) {
+        super(name, power);
+    }
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        this.view.signalAbility(() => continuation(value - 1));
+    };
+
+    getDescriptions() {
+        return ['Получает на 1 меньше урона', super.getDescriptions()];
+    }
+};
+
+//Гатлинг
+class Gatling extends Creature {
+    constructor(name = 'Гатлинг', power = 6) {
+        super(name, power);
+    }
+
+    attack(gameContext, continuation) {
+        const taskQueue = new TaskQueue();
+        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+
+        taskQueue.push(onDone => this.view.showAttack(onDone));
+        const cards = gameContext.oppositePlayer.table;
+        for (const card of cards) {
+            if (cards) {
+                taskQueue.push(onDone => {
+                    this.dealDamageToCreature(2, card, gameContext, onDone);
+                });
+            } else {
+                taskQueue.push(onDone => this.dealDamageToPlayer(1, gameContext, onDone));
+            }
+        }
+        taskQueue.continueWith(continuation);
+    }
+}
+
+//Братки
+class Lad extends Dog {
+    constructor(name = 'Братки', power = 2) {
+        super(name, power);
+    }
+
+    static getInGameCount() { 
+        return this.inGameCount || 0; 
+    }
+
+    static setInGameCount(value) { 
+        this.inGameCount = value; 
+    }
+
+    doAfterComingIntoPlay(gameContext, continuation) {
+        Lad.setInGameCount(Lad.getInGameCount() + 1);
+        continuation();
+    }
+
+    doBeforeRemoving(continuation) {
+        Lad.setInGameCount(Lad.getInGameCount() - 1);
+        continuation();
+    }
+
+    static getBonus() {
+        return Lad.getInGameCount() * (Lad.getInGameCount() + 1) / 2;
+    }
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
+        return continuation(value + Lad.getBonus());
+    }
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        return continuation(value - Lad.getBonus());
+    }
+
+    getDescriptions() {
+        if (Lad.prototype.hasOwnProperty('modifyDealedDamageToCreature') || Lad.prototype.hasOwnProperty('modifyTakenDamage'))
+            return ['Чем их больше, тем они сильнее', super.getDescriptions()];
+        return super.getDescriptions();
+    }
+}
+
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
