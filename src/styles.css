@@ -1,9 +1,9 @@
 body {
-    margin: 0px;
+    margin: 0;
 }
 
 .container {
-    font-family: Arial;
+    font-family: Arial, serif;
     display: grid;
     grid-template-rows: auto auto auto;
     grid-row-gap: 10px;
@@ -167,8 +167,8 @@ body {
 }
 
 .cardImage {
-    left: 5px;
-    right: 5px;
+    left: 0;
+    right: 0;
     position: absolute;
     height: 100%;
     text-align: center;
