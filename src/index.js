@@ -29,12 +29,11 @@ class Creature extends Card {
         super(name, power, image);
     }
 
-    getCurrentPower() {
+    get power() {
         return this.currentPower;
     }
 
-    // TODO переписать на get currentPower
-    setCurrentPower(value) {
+    set power(value) {
         this.currentPower = Math.min(this.maxPower, this.currentPower + value);
     }
 
@@ -190,7 +189,7 @@ class Brewer extends Duck {
                 if (isDuck(card))
                     card.view.signalHeal(() => {
                         card.maxPower += 1;
-                        card.setCurrentPower(2);
+                        card.power += 2;
                         card.updateView();
                     });
             }
