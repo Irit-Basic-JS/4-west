@@ -68,8 +68,9 @@ class Trasher extends Dog {
     }
 
     modifyTakenDamage(value, fromCard, gameContext, continuation) {
-        if (value > 1) {
-            this.view.signalAbility(() => super.modifyTakenDamage(value - 1, fromCard, gameContext, continuation));
+        const bonus = 1;
+        if (value > bonus) {
+            this.view.signalAbility(() => super.modifyTakenDamage(value - bonus, fromCard, gameContext, continuation));
         } else {
             this.view.signalAbility(continuation);
         }
@@ -92,12 +93,11 @@ class Gatling extends Creature {
         const oppositeTable = oppositePlayer.table
 
         oppositeTable.forEach(oppositeCard => {
-            taskQueue.push(onDone => {
-                if (oppositeCard) {
-                    this.view.showAttack(onDone);
-                    this.dealDamageToCreature(2, oppositeCard, gameContext, onDone);
-                }
-            });
+            if (oppositeCard) {
+                taskQueue.push(onDone => {
+                    this.view.showAttack(() => this.dealDamageToCreature(2, oppositeCard, gameContext, onDone));
+                });
+            }
         });
 
         taskQueue.continueWith(continuation);
@@ -136,7 +136,7 @@ class Lad extends Dog {
     modifyTakenDamage(value, fromCard, gameContext, continuation) {
         const bonus = Lad.getBonus();
         if (value >= bonus) {
-            this.view.signalAbility(() => super.modifyTakenDamage(value - Lad.getBonus(), fromCard, gameContext, continuation));
+            this.view.signalAbility(() => super.modifyTakenDamage(value - bonus, fromCard, gameContext, continuation));
         } else {
             this.view.signalAbility(continuation);
         }
@@ -246,14 +246,18 @@ class Nemo extends Creature {
 }
 
 const sheriffStartDeck = [
+    new Duck(),
+    new Gatling(),
     new Nemo(),
+    new Rogue(),
     new Nemo(),
 ];
 const banditStartDeck = [
     new Brewer(),
-    new Brewer(),
-    new Brewer(),
     new Lad(),
+    new Nemo(),
+    new Lad(),
+    new PseudoDuck(),
 ];
 
 const game = new Game(sheriffStartDeck, banditStartDeck);
