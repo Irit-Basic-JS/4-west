@@ -167,8 +167,8 @@ body {
 }
 
 .cardImage {
-    left: 5px;
-    right: 5px;
+    left: 0;
+    right: 0;
     position: absolute;
     height: 100%;
     text-align: center;
@@ -176,6 +176,7 @@ body {
 
 .cardImage img {
     height: 100%;
+    width: 100%;
 }
 
 .cardDescriptions {
