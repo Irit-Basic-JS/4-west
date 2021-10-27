@@ -212,10 +212,6 @@ body {
     opacity: 0.0;
 }
 
-.cardSignal {
-    transform: rotateY(180deg);
-}
-
 .cardSignal.damage,
 .playerSignal.damage {
     background: darkred;
