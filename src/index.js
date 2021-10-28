@@ -120,8 +120,36 @@ class Lad extends Dog {
         let isLad = Lad.prototype.hasOwnProperty("modifyDealedDamageToCreature") &&
             Lad.prototype.hasOwnProperty("modifyDealedDamageToCreature");
         return isLad
-            ? ["Чем их больше, тем они сильнее", ...super.getDescriptions()]
+            ? ['Чем их больше, тем они сильнее', ...super.getDescriptions()]
             : super.getDescriptions();
+    }
+}
+
+class Rogue extends Creature {
+    constructor(name = 'Изгой', maxPower = 2) {
+        super(name, maxPower);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const { currentPlayer, oppositePlayer, position, updateView } = gameContext;
+        const taskQueue = new TaskQueue();
+        const abilities = ['modifyDealedDamageToCreature',
+            'modifyDealedDamageToPlayer',
+            'modifyTakenDamage'];
+        const toCard = oppositePlayer.table[position];
+        const oppositePrototype = Object.getPrototypeOf(toCard);
+
+        taskQueue.push(onDone => {
+            abilities.forEach(ability => {
+                if (oppositePrototype.hasOwnProperty(ability))
+                    this[ability] = oppositePrototype[ability];
+                delete oppositePrototype[ability];
+            });
+            this.view.signalAbility(onDone);
+            gameContext.updateView();
+        });
+        
+        taskQueue.continueWith(continuation);
     }
 }
 
@@ -129,8 +157,10 @@ const seriffStartDeck = [
     new Duck(),
     new Duck(),
     new Duck(),
+    new Rogue(),
 ];
 const banditStartDeck = [
+    new Lad(),
     new Lad(),
     new Lad(),
 ];
@@ -140,7 +170,7 @@ const banditStartDeck = [
 const game = new Game(seriffStartDeck, banditStartDeck);
 
 // Глобальный объект, позволяющий управлять скоростью всех анимаций.
-SpeedRate.set(2.5);
+SpeedRate.set(10);
 
 // Запуск игры.
 game.play(false, (winner) => {
