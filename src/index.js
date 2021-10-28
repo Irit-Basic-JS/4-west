@@ -33,6 +33,14 @@ class Creature extends Card {
         this._currentPower = maxPower;
     }
 
+    get currentPower() {
+        return this._currentPower;
+    }
+
+    set currentPower(value) {
+        this._currentPower = value > this.maxPower ? this.maxPower : value;
+    }
+
     getDescriptions() {
         return [getCreatureDescription(this), super.getDescriptions()];
     }
@@ -162,26 +170,81 @@ class Rogue extends Creature {
         continuation();
         updateView();
     }
+
+    getDescriptions() {
+        let descriptions = super.getDescriptions();
+        descriptions.push('Крадет способности');
+        return descriptions;
+    }
+}
+
+class Brewer extends Duck {
+    constructor(name = "Пивовар", maxPower = 2) {
+        super(name, maxPower);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        let taskQueue = new TaskQueue();
+        const cards = gameContext.currentPlayer.table.concat(gameContext.oppositePlayer.table);
+
+        for(let card of cards.filter(card => isDuck(card))) {
+            card.view.signalHeal();
+            card.maxPower += 1;
+            card.currentPower += 2;
+            card.updateView();
+        }
+
+        taskQueue.continueWith(continuation);
+        
+    }
+
+    getDescriptions() {
+        let descriptions = super.getDescriptions();
+        descriptions.push('Раздает живительное пиво');
+        return descriptions;
+    }
+}
+
+class PseudoDuck extends Dog {
+    constructor() {
+        super("Псевдоутка", 3);
+    }
+    swims() {}
+    quacks() {}
+}
+
+class Nemo extends Creature {
+    constructor(name = 'Немо', maxPower = 4) {
+        super(name, maxPower);
+    }
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
+        Object.setPrototypeOf(this, Object.getPrototypeOf(toCard));
+        this.doBeforeAttack(gameContext, continuation);
+        gameContext.updateView();
+    }
+
+    getDescriptions() {
+        let descriptions = super.getDescriptions();
+        descriptions.push('The one without a name without an honest heart as compass');
+        return descriptions;
+    }
 }
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
-    new Duck(),
-    new Duck(),
-    new Duck(),
-    new Rogue(),
+    new Nemo(),
 ];
 const banditStartDeck = [
-    new Lad(),
-    new Lad(),
-    new Lad(),
+    new Brewer(),
+    new Brewer(),
 ];
 
 // Создание игры.
 const game = new Game(seriffStartDeck, banditStartDeck);
 
 // Глобальный объект, позволяющий управлять скоростью всех анимаций.
-SpeedRate.set(2);
+SpeedRate.set(3);
 
 // Запуск игры.
 game.play(false, (winner) => {
