@@ -69,24 +69,28 @@ class Trasher extends Dog {
     }
 }
 
-// Колода Шерифа, нижнего игрока.
-const seriffStartDeck = [
-    new Duck('General Kenobi', 10),
-    new Duck(),
-    new Duck(),
-    new Duck(),
-    new Duck(),
-    new Duck(),
-    new Duck(),
-];
+class Gatling extends Creature {
+    constructor(name = 'Гатлинг', maxPower = 6) {
+        super(name, maxPower);
+    }
 
-// Колода Бандита, верхнего игрока.
+    attack(gameContext, continuation){
+        gameContext.oppositePlayer.table.forEach(card => {
+            this.dealDamageToCreature(this.currentPower, card, gameContext, continuation);
+        });
+    }
+}
+
+const seriffStartDeck = [
+    new Duck(),
+    new Duck(),
+    new Duck(),
+    new Gatling(),
+];
 const banditStartDeck = [
-    new Dog(),
     new Trasher(),
     new Dog(),
-    new Dog('Giga Chad', 13),
-    new Dog('What da dog doin\'', 1),
+    new Dog(),
 ];
 
 
@@ -94,7 +98,7 @@ const banditStartDeck = [
 const game = new Game(seriffStartDeck, banditStartDeck);
 
 // Глобальный объект, позволяющий управлять скоростью всех анимаций.
-SpeedRate.set(5);
+SpeedRate.set(2.5);
 
 // Запуск игры.
 game.play(false, (winner) => {
