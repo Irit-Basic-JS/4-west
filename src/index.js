@@ -32,6 +32,14 @@ class Creature extends Card {
         super(name, maxPower);
     }
 
+    get currentPower() {
+        return this.power;
+    };
+
+    set currentPower(value) {
+        this.power = Math.min(Math.max(value, 0), this.maxPower);
+    };
+
     getDescriptions() {
         return [getCreatureDescription(this),
         ...super.getDescriptions()];
@@ -148,21 +156,45 @@ class Rogue extends Creature {
             this.view.signalAbility(onDone);
             gameContext.updateView();
         });
-        
+
+        taskQueue.continueWith(continuation);
+    }
+}
+
+class Brewer extends Duck {
+    constructor(name = 'Пивовар', maxPower = 2) {
+        super(name, maxPower);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const { currentPlayer, oppositePlayer, position, updateView } = gameContext;
+        const ducksOnTable = currentPlayer.table
+            .concat(oppositePlayer.table)
+            .filter(card => isDuck(card));
+        const taskQueue = new TaskQueue();
+
+        ducksOnTable.forEach(duck => {
+            taskQueue.push(onDone => {
+                duck.maxPower++;
+                duck.currentPower += 2;
+                duck.view.signalHeal(onDone);
+                duck.updateView();
+            });
+        });
+
         taskQueue.continueWith(continuation);
     }
 }
 
 const seriffStartDeck = [
     new Duck(),
-    new Duck(),
-    new Duck(),
-    new Rogue(),
+    new Brewer(),
 ];
 const banditStartDeck = [
-    new Lad(),
-    new Lad(),
-    new Lad(),
+    new Dog(),
+    new Dog(),
+    new Dog(),
+    new Dog(),
 ];
 
 
@@ -170,7 +202,7 @@ const banditStartDeck = [
 const game = new Game(seriffStartDeck, banditStartDeck);
 
 // Глобальный объект, позволяющий управлять скоростью всех анимаций.
-SpeedRate.set(10);
+SpeedRate.set(3);
 
 // Запуск игры.
 game.play(false, (winner) => {
