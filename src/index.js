@@ -195,16 +195,34 @@ class PseudoDuck extends Dog {
     quacks() { }
 }
 
+class Nemo extends Creature {
+    constructor(name = 'Немо', maxPower = 4) {
+        super(name, maxPower);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+        const taskQueue = new TaskQueue();
+
+        taskQueue.push(onDone => {
+            const toCard = oppositePlayer.table[position];
+            Object.setPrototypeOf(this, Object.getPrototypeOf(toCard));
+            this.doBeforeAttack(gameContext);
+            this.view.signalAbility(onDone);
+            gameContext.updateView();
+        })
+
+        taskQueue.continueWith(continuation);
+    }
+}
+
 const seriffStartDeck = [
-    new Duck(),
-    new Brewer(),
+    new Nemo(),
 ];
 const banditStartDeck = [
-    new Dog(),
-    new PseudoDuck(),
-    new Dog(),
+    new Brewer(),
+    new Brewer(),
 ];
-
 
 // Создание игры.
 const game = new Game(seriffStartDeck, banditStartDeck);
