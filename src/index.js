@@ -62,16 +62,67 @@ class Trasher extends Dog{
     };
 }
 
+class Gatling extends Creature{
+    constructor(name = 'Гатлинг', maxPower = 6){
+        super(name, maxPower)
+    }
+    attack(gameContext, continuation){
+        gameContext.oppositePlayer.table.forEach(element => {
+            this.dealDamageToCreature(2, element, gameContext, continuation)
+        });
+    }
+    getDescriptions(){
+        return ['Наносит 2 урона всем картам противника', ...super.getDescriptions()];
+    }
+}
+
+class Lad extends Dog{
+    constructor(name='Браток', maxPower=2){
+        super(name, maxPower)
+    }
+    static getInGameCount() { return this.inGameCount || 0; }
+    static setInGameCount(value) { this.inGameCount = value; }
+    
+    doAfterComingIntoPlay(gameContext, continuation){
+        Lad.setInGameCount(Lad.getInGameCount() + 1);
+        continuation();
+    }
+    doBeforeRemoving(continuation){
+        Lad.setInGameCount(Lad.getInGameCount() - 1);
+        continuation();
+    }
+
+    static getBonus(){
+        return this.inGameCount*(this.inGameCount+1)/2;
+    }
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation){
+        this.view.signalAbility(()=>
+        super.modifyTakenDamage(value + Lad.getBonus(), toCard, gameContext, continuation))
+    }
+    modifyTakenDamage(value, fromCard, gameContext, continuation){
+        this.view.signalAbility(() =>
+         super.modifyTakenDamage(value - Lad.getBonus(), fromCard, gameContext, continuation));
+    }
+    getDescriptions(){
+        if (Lad.prototype.hasOwnProperty('modifyDealedDamageToCreature') 
+            || Lad.prototype.hasOwnProperty('modifyTakenDamage'))
+            return ['Чем их больше, тем они сильнее', ...super.getDescriptions()];
+        return super.getDescriptions();
+    }
+}
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
     new Duck(),
     new Duck(),
     new Duck(),
+    new Gatling(),
 ];
 
 // Колода Бандита, верхнего игрока.
 const banditStartDeck = [
-    new Trasher(),
+    new Lad(),
+    new Lad(),
 ];
 
 
@@ -79,7 +130,7 @@ const banditStartDeck = [
 const game = new Game(seriffStartDeck, banditStartDeck);
 
 // Глобальный объект, позволяющий управлять скоростью всех анимаций.
-SpeedRate.set(1);
+SpeedRate.set(5);
 
 // Запуск игры.
 game.play(false, (winner) => {
