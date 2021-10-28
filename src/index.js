@@ -74,10 +74,54 @@ class Gatling extends Creature {
         super(name, maxPower);
     }
 
-    attack(gameContext, continuation){
+    attack(gameContext, continuation) {
         gameContext.oppositePlayer.table.forEach(card => {
             this.dealDamageToCreature(this.currentPower, card, gameContext, continuation);
         });
+    }
+}
+
+class Lad extends Dog {
+    constructor(name = 'Браток', maxPower = 2) {
+        super(name, maxPower);
+    }
+
+    static getInGameCount() {
+        return this.inGameCount || 0;
+    }
+
+    static setInGameCount(value) {
+        this.inGameCount = value;
+    }
+
+    static getBonus() {
+        return this.inGameCount * (this.inGameCount + 1) / 2;
+    }
+
+    doAfterComingIntoPlay(gameContext, continuation) {
+        Lad.setInGameCount(Lad.getInGameCount() + 1);
+        continuation();
+    }
+
+    doBeforeRemoving(continuation) {
+        Lad.setInGameCount(Lad.getInGameCount() - 1);
+        continuation();
+    };
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        this.view.signalAbility(() => continuation(value - Lad.getBonus()));
+    };
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
+        this.view.signalAbility(() => continuation(value + Lad.getBonus()));
+    }
+
+    getDescriptions() {
+        let isLad = Lad.prototype.hasOwnProperty("modifyDealedDamageToCreature") &&
+            Lad.prototype.hasOwnProperty("modifyDealedDamageToCreature");
+        return isLad
+            ? ["Чем их больше, тем они сильнее", ...super.getDescriptions()]
+            : super.getDescriptions();
     }
 }
 
@@ -85,12 +129,10 @@ const seriffStartDeck = [
     new Duck(),
     new Duck(),
     new Duck(),
-    new Gatling(),
 ];
 const banditStartDeck = [
-    new Trasher(),
-    new Dog(),
-    new Dog(),
+    new Lad(),
+    new Lad(),
 ];
 
 
