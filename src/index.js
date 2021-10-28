@@ -27,7 +27,17 @@ function getCreatureDescription(card) {
     return 'Существо';
 }
 
-class Duck extends Card {
+class Creature extends Card {
+    constructor(name = "Существо", maxPower = 1) {
+        super(name, maxPower);
+    }
+
+    getDescriptions() {
+        return [getCreatureDescription(this), super.getDescriptions()];
+    }
+}
+
+class Duck extends Creature {
     constructor(name = "Мирная утка", maxPower = 2) {
         super(name, maxPower);
     }
@@ -37,11 +47,13 @@ class Duck extends Card {
     swims = function () { console.log('float: both;') };
 }
 
-class Dog extends Card{
-    constructor(name = 'Пес-бандит', maxPower = 3){
+class Dog extends Creature {
+    constructor(name = 'Пес-бандит', maxPower = 3) {
         super(name, maxPower);
     }
 }
+
+
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
