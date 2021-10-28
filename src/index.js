@@ -52,7 +52,6 @@ class Duck extends Creature {
     }
 
     quacks = function () { console.log('quack') };
-
     swims = function () { console.log('float: both;') };
 }
 
@@ -84,8 +83,13 @@ class Gatling extends Creature {
 
     attack(gameContext, continuation) {
         gameContext.oppositePlayer.table.forEach(card => {
-            this.dealDamageToCreature(this.currentPower, card, gameContext, continuation);
+            this.dealDamageToCreature(2, card, gameContext, continuation);
         });
+    }
+
+    getDescriptions() {
+        return ['Стреляет по вражеским картам очередью.',
+            ...super.getDescriptions()];
     }
 }
 
@@ -145,19 +149,26 @@ class Rogue extends Creature {
             'modifyDealedDamageToPlayer',
             'modifyTakenDamage'];
         const toCard = oppositePlayer.table[position];
-        const oppositePrototype = Object.getPrototypeOf(toCard);
-
-        taskQueue.push(onDone => {
-            abilities.forEach(ability => {
-                if (oppositePrototype.hasOwnProperty(ability))
-                    this[ability] = oppositePrototype[ability];
-                delete oppositePrototype[ability];
+        const oppositePrototype = toCard !== undefined
+            ? Object.getPrototypeOf(toCard)
+            : null;
+        if (oppositePrototype !== null)
+            taskQueue.push(onDone => {
+                abilities.forEach(ability => {
+                    if (oppositePrototype.hasOwnProperty(ability))
+                        this[ability] = oppositePrototype[ability];
+                    delete oppositePrototype[ability];
+                });
+                this.view.signalAbility(onDone);
+                gameContext.updateView();
             });
-            this.view.signalAbility(onDone);
-            gameContext.updateView();
-        });
 
         taskQueue.continueWith(continuation);
+    }
+
+    getDescriptions() {
+        return ['Отнимает бонусные характеристики у противоположной карты.',
+            ...super.getDescriptions()];
     }
 }
 
@@ -184,6 +195,11 @@ class Brewer extends Duck {
 
         taskQueue.continueWith(continuation);
     }
+
+    getDescriptions() {
+        return ['Пивка для рывка!',
+            ...super.getDescriptions()];
+    }
 }
 
 class PseudoDuck extends Dog {
@@ -193,6 +209,11 @@ class PseudoDuck extends Dog {
 
     swims() { }
     quacks() { }
+
+    getDescriptions() {
+        return ['Точно не шпион.',
+            ...super.getDescriptions()];
+    }
 }
 
 class Nemo extends Creature {
@@ -201,25 +222,49 @@ class Nemo extends Creature {
     }
 
     doBeforeAttack(gameContext, continuation) {
-        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+        const { currentPlayer, oppositePlayer, position, updateView } = gameContext;
         const taskQueue = new TaskQueue();
 
-        taskQueue.push(onDone => {
-            const toCard = oppositePlayer.table[position];
-            Object.setPrototypeOf(this, Object.getPrototypeOf(toCard));
-            this.doBeforeAttack(gameContext);
-            this.view.signalAbility(onDone);
-            gameContext.updateView();
-        })
+        const toCard = oppositePlayer.table[position];
+        const oppositePrototype = toCard !== undefined
+            ? Object.getPrototypeOf(toCard)
+            : null;
+
+        if (oppositePrototype !== null)
+            taskQueue.push(onDone => {
+                Object.setPrototypeOf(this, oppositePrototype);
+                this.doBeforeAttack(gameContext);
+                this.view.signalAbility(onDone);
+                gameContext.updateView();
+            })
 
         taskQueue.continueWith(continuation);
+    }
+
+    getDescriptions() {
+        return ["Перед атакой крадёт все способности противоположной карты.",
+            ...super.getDescriptions()]
     }
 }
 
 const seriffStartDeck = [
+    new Duck(),
+    new Gatling(),
+    new Rogue(),
+    new Duck('Король королей', 10),
+    new Brewer(),
     new Nemo(),
+    new Nemo(),
+    new Brewer(),
 ];
+
 const banditStartDeck = [
+    new Dog(),
+    new Trasher(),
+    new Lad(),
+    new Lad(),
+    new Dog(),
+    new PseudoDuck(),
     new Brewer(),
     new Brewer(),
 ];
@@ -228,7 +273,7 @@ const banditStartDeck = [
 const game = new Game(seriffStartDeck, banditStartDeck);
 
 // Глобальный объект, позволяющий управлять скоростью всех анимаций.
-SpeedRate.set(3);
+SpeedRate.set(5);
 
 // Запуск игры.
 game.play(false, (winner) => {
