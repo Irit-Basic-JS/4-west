@@ -222,13 +222,15 @@ class Nemo extends Creature{
 }
 
 const seriffStartDeck = [
-    new Dog(),
-    new Dog(),
+    new Duck(),
+    new Duck(),
+    new Duck(),
+    new Gatling(),
 ];
 const banditStartDeck = [
-    new Duck(),
-    new Brewer(),
-    new Brewer(),
+    new Trasher(),
+    new Dog(),
+    new Dog(),
 ];
 
 // Создание игры.
