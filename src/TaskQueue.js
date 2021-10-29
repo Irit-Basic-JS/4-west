@@ -1,10 +1,9 @@
-const TaskQueue = function() {
-    function TaskQueue() {
+export default class TaskQueue {
+    constructor() {
         this.tasks = [];
-        this.running = false;
     }
 
-    TaskQueue.prototype.push = function(run, dispose, duration) {
+    push(run, dispose, duration) {
         if (duration === undefined || duration === null) {
             this.tasks.push({runAndContinue: run, dispose});
         } else {
@@ -18,38 +17,36 @@ const TaskQueue = function() {
                 dispose
             });
         }
-        runNextTask(this);
+        nextTask(this);
     };
 
-    TaskQueue.prototype.continueWith = function(action) {
+    continueWith(action) {
         this.push(action, null, 0);
     };
+};
 
-    function runNextTask(taskQueue) {
-        if (taskQueue.running || taskQueue.tasks.length === 0) {
-            return;
-        }
-        taskQueue.running = true;
-        const task = taskQueue.tasks.shift();
-
-        if (task.runAndContinue) {
-            setTimeout(() => {
-                task.runAndContinue(() => {
-                    task.dispose && task.dispose();
-                    taskQueue.running = false;
-
-                    setTimeout(() => {
-                        runNextTask(taskQueue);
-                    });
-                });
-            }, 0);
-        }
-        else {
-            runNextTask(taskQueue);
-        }
+function nextTask(taskQueue) {
+    if (taskQueue.running || taskQueue.tasks.length === 0) {
+        return;
     }
+    taskQueue.running = true;
+    const currentTask = taskQueue.tasks.shift();
 
-    return TaskQueue;
-}();
+    if (currentTask.runAndContinue) {
+        setTimeout(() => {
+            currentTask.runAndContinue(() => {
+                currentTask.dispose && currentTask.dispose();
+                taskQueue.running = false;
 
-export default TaskQueue;
+                setTimeout(() => {
+                    nextTask(taskQueue);
+                });
+            });
+        }, 0);
+    }
+    else {
+        nextTask(taskQueue);
+    }
+}
+
+nextTask(new TaskQueue());
