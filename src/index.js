@@ -88,16 +88,150 @@ class Trasher extends Dog {
     }
 }
 
-// Колода Шерифа, нижнего игрока.
-const seriffStartDeck = [
-    new Card('Мирный житель', 2),
-    new Card('Мирный житель', 2),
-    new Card('Мирный житель', 2),
-];
+class Gatling extends Creature {
+    constructor(name = 'Гатлинг', maxPower = 6){
+        super(name, maxPower);
+    }
 
-// Колода Бандита, верхнего игрока.
+    attack(gameContext, continuation) {
+        const taskQueue = new TaskQueue();
+        const oppositePlayer = gameContext.oppositePlayer;
+        const table = oppositePlayer.table;
+
+        for (let position = 0; position < table.length; position++) {
+            const card = table[position];
+            taskQueue.push(onDone => {
+                this.view.showAttack(onDone);
+                this.dealDamageToCreature(2, card, gameContext, onDone);
+            });
+        }
+
+        taskQueue.continueWith(continuation);
+    }
+}
+
+class Lad extends Dog {
+    constructor(name = 'Браток', startPower = 2) {
+        super(name, startPower);
+    }
+
+    static getInGameCount() {
+        return this.inGameCount || 0;
+    }
+
+    static seInGameCount(value) {
+        this.inGameCount = value;
+    }
+
+    doAfterComingIntoPlay(gameContext, continuation) {
+        Lad.seInGameCount(Lad.getInGameCount() + 1);
+        super.doAfterComingIntoPlay(gameContext, continuation);
+
+    }
+
+    doBeforeRemoving(continuation) {
+        Lad.seInGameCount(Lad.getInGameCount() - 1);
+        super.doBeforeRemoving(continuation);
+    }
+
+    static getBonus() {
+        return this.getInGameCount() * (this.getInGameCount() + 1) / 2;
+    }
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
+        super.modifyDealedDamageToCreature(value + Lad.getBonus(), toCard, gameContext, continuation);
+    }
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        super.modifyTakenDamage(value - Lad.getBonus(), fromCard, gameContext, continuation);
+    }
+
+    getDescriptions() {
+        const isLad = Lad.prototype.hasOwnProperty('modifyDealedDamageToCreature') && Lad.prototype.hasOwnProperty(
+            'modifyTakenDamage');
+        return isLad
+            ? ['Чем их больше, тем они сильнее', ...super.getDescriptions()]
+            : super.getDescriptions();
+    }
+}
+
+class Rogue extends Creature {
+    constructor(name = 'Изгой', maxPower = 2) {
+        super(name, maxPower);
+    }
+
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
+        const toSteal = ["modifyDealedDamageToCreature", "modifyDealedDamageToPlayer", "modifyTakenDamage"];
+        const cardPrototype = Object.getPrototypeOf(toCard);
+        for (const property of toSteal) {
+            if (cardPrototype.hasOwnProperty(property)) {
+                this[property] = cardPrototype[property];
+                delete cardPrototype[property];
+            }
+        }
+
+        gameContext.updateView();
+        super.modifyDealedDamageToCreature(value, toCard, gameContext, continuation);
+    }
+
+}
+
+class Brewer extends Duck {
+    constructor(name = 'Пивовар', maxPower = 2) {
+        super(name, maxPower);
+    }
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        const {currentPlayer, oppositePlayer} = gameContext;
+        const cards = currentPlayer.table.concat(oppositePlayer.table);
+
+        const taskQueue = new TaskQueue();
+        for (const card of cards.filter(card => isDuck(card))) {
+            taskQueue.push(onDone => {
+                card.maxPower += 1;
+                card.currentPower += 2;
+                card.updateView();
+                card.view.signalHeal(onDone);
+            });
+
+        }
+
+        taskQueue.continueWith(continuation);
+    }
+
+}
+
+class PseudoDuck extends Dog {
+    constructor(name = 'Псевдоутка', maxPower = 3) {
+        super(name, maxPower);
+    }
+
+    quacks() {
+    }
+
+    swims() {
+    }
+}
+
+class Nemo extends Creature {
+    constructor(name = 'Немо', maxPower = 4) {
+        super(name, maxPower);
+    }
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
+        Object.setPrototypeOf(this, Object.getPrototypeOf(toCard));
+        this.doBeforeAttack(gameContext, continuation);
+        gameContext.updateView();
+    }
+}
+
+const seriffStartDeck = [
+    new Nemo(),
+];
 const banditStartDeck = [
-    new Card('Бандит', 3),
+    new Brewer(),
+    new Brewer(),
 ];
 
 
