@@ -27,19 +27,66 @@ function getCreatureDescription(card) {
     return 'Существо';
 }
 
+class Creature extends Card {
+    constructor(name, maxPower) {
+        super(name, maxPower);
+        this._currentPower = maxPower;
+    }
 
+    getDescriptions() {
+        return [getCreatureDescription(this), super.getDescriptions()];
+    }
 
-// Основа для утки.
-function Duck() {
-    this.quacks = function () { console.log('quack') };
-    this.swims = function () { console.log('float: both;') };
+    get currentPower() {
+        return this._currentPower;
+    }
+
+    set currentPower(value) {
+        value = Math.max(0, value);
+        value = Math.min(this.maxPower, value);
+        this._currentPower = value;
+    }
 }
 
+class Duck extends Creature {
+    constructor(name = 'Мирная утка', maxPower = 2) {
+        super(name, maxPower);
+    }
 
-// Основа для собаки.
-function Dog() {
+    quacks() {
+        console.log('quack');
+    };
+    swims() {
+        console.log('float: both;');
+    };
 }
 
+class Dog extends Creature {
+    constructor(name = 'Пес-бандит', maxPower = 3) {
+        super(name, maxPower);
+    }
+}
+
+class Trasher extends Dog {
+    constructor(name = 'Громила', maxPower = 5) {
+        super(name, maxPower);
+    }
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        if (value > 1) {
+            this.view.signalAbility(() =>
+                super.modifyTakenDamage(value - 1, fromCard, gameContext, continuation));
+        } else {
+            this.view.signalAbility(continuation);
+        }
+    }
+    getDescriptions() {
+        const isTrasher = Trasher.prototype.hasOwnProperty('modifyTakenDamage');
+        return isTrasher
+            ? ['Получает на 1 меньше урона', ...super.getDescriptions()]
+            : super.getDescriptions();
+    }
+}
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
