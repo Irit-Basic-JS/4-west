@@ -133,22 +133,35 @@ class Brewer extends Duck{
     }
     doBeforeAttack(gameContext, continuation){
         const newQueue = new TaskQueue();
-        gameContext.currentPlayer.table
-        .concat(gameContext.oppositePlayer.table)
-        .filter(card => isDuck(card))
-        .forEach(element =>{
-            taskQueue.push(whenEnd => {
+        const { currentPlayer, oppositePlayer, position, updateView } = gameContext;
+        let elements = currentPlayer.table.concat(oppositePlayer.table).filter(x => isDuck(x));
+        
+        for (let element of elements) {
+            newQueue.push(whenOver => {
                 element.maxPower += 1;
                 element.currentPower += 2;
-                element.view.signalHeal(whenEnd);
+                element.view.signalHeal(whenOver);
                 element.updateView();
             });
-        })
+        }
         newQueue.continueWith(continuation);
     }
 
     getDescriptions(){
         return ['Востанавливает силу уток!', ...super.getDescriptions()];
+    }
+}
+class PseudoDuck extends Dog {
+    constructor(name = 'Уткопёс', maxPower = 3) {
+        super(name, maxPower);
+    }
+
+    quacks = function () {};
+    swims = function () {};
+
+    getDescriptions() {
+        return ['Утка-Собака',
+            ...super.getDescriptions()]
     }
 }
 
